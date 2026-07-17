@@ -15,6 +15,6 @@ async def catch_all(request: Request, path: str):
     result = client.predict(
         image=data.get("image"),
         prompt=data.get("prompt"),
-        api_name="/predict" 
+        api_name="/procesar_foto" 
     )
     return {"resultado": result}
