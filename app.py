@@ -1,24 +1,19 @@
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, Request
 from gradio_client import Client
-import shutil
-import os
 
 app = FastAPI()
-
 client = Client("https://kcai123-mi-servidor-fotos.hf.space/")
 
-# Ahora cambiamos la ruta a "/" (la raíz)
-@app.post("/") 
-async def procesar(image: UploadFile = File(...), prompt: str = Form(...)):
-    with open(image.filename, "wb") as buffer:
-        shutil.copyfileobj(image.file, buffer)
+# Esto captura cualquier ruta que tu app intente buscar
+@app.api_route("/{path:path}", methods=["GET", "POST"])
+async def catch_all(request: Request, path: str):
+    # Obtiene los datos de la petición
+    data = await request.json() if request.method == "POST" else {}
     
+    # Redirige todo al endpoint /predict que espera Hugging Face
     result = client.predict(
-        image=image.filename, 
-        prompt=prompt, 
-        api_name="/predict" 
+        image=data.get("image"),
+        prompt=data.get("prompt"),
+        api_name="/predict"
     )
-    
-    os.remove(image.filename)
-    
     return {"resultado": result}
