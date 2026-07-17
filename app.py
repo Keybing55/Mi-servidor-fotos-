@@ -4,16 +4,17 @@ from gradio_client import Client
 app = FastAPI()
 client = Client("https://kcai123-mi-servidor-fotos.hf.space/")
 
-# Esto captura cualquier ruta que tu app intente buscar
+# Esto nos ayudará a ver los nombres reales de las funciones
+print("Funciones disponibles en el Space:", client.view_api())
+
 @app.api_route("/{path:path}", methods=["GET", "POST"])
 async def catch_all(request: Request, path: str):
-    # Obtiene los datos de la petición
     data = await request.json() if request.method == "POST" else {}
     
-    # Redirige todo al endpoint /predict que espera Hugging Face
+    # Aquí cambiaremos '/predict' por el nombre correcto en cuanto veamos los logs
     result = client.predict(
         image=data.get("image"),
         prompt=data.get("prompt"),
-        api_name="/predict"
+        api_name="/predict" 
     )
     return {"resultado": result}
