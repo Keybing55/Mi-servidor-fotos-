@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
-from gradio_client import Client
+from gradio_client import Client, handle_file
 import shutil
 import os
 
@@ -23,23 +23,18 @@ async def catch_all(request: Request, path: str):
         else:
             return JSONResponse(status_code=400, content={"error": "No se encontró ninguna imagen"})
 
-        # Llamar a Hugging Face
+        # Llamar a Hugging Face usando handle_file() para que Gradio acepte la imagen correctamente
         output_path = client.predict(
-            image=temp_file_path,
+            image=handle_file(temp_file_path),
             prompt=prompt,
             api_name="/procesar_foto"
         )
         
-        # El cliente de Gradio devuelve la ruta del archivo de salida. 
-        # Vamos a leer ese archivo en bytes para devolvérselo directamente al móvil.
         if output_path and os.path.exists(output_path):
             with open(output_path, "rb") as img_file:
                 image_bytes = img_file.read()
             
-            # Limpiar archivos temporales
             os.remove(temp_file_path)
-            
-            # Devolver la imagen pura al móvil con el tipo correcto
             return Response(content=image_bytes, media_type="image/png")
         else:
             return JSONResponse(status_code=500, content={"error": "La IA no devolvió ninguna imagen"})
